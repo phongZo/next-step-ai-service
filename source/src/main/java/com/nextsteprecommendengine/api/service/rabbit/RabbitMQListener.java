@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nextsteprecommendengine.api.constant.NextStepRecommendengineConstant;
 import com.nextsteprecommendengine.api.controller.ABasicController;
-import com.nextsteprecommendengine.api.dto.cvembedding.CvEmbeddingDto;
-import com.nextsteprecommendengine.api.dto.postembedding.PostEmbeddingDto;
 import com.nextsteprecommendengine.api.form.BaseSendMsgForm;
 import com.nextsteprecommendengine.api.model.CandidateCv;
 import com.nextsteprecommendengine.api.model.PostEmbedding;
@@ -40,18 +38,19 @@ public class RabbitMQListener extends ABasicController {
     @RabbitListener(queues = "${rabbitmq.queue.process-cv}")
     public void handleListenUploadCv(String json) {
         try {
-            JsonNode root          = objectMapper.readTree(json);
-            String cmd             = root.path("cmd").asText();
-            JsonNode dataNode      = root.path("data");
-            String app             = root.path("app").asText();
-            String subCmd          = root.path("subCmd").asText();
-            String responseCode    = root.path("responseCode").asText();
-            String token           = root.path("token").asText();
+            BaseSendMsgForm<Map<String, Object>> form =
+                    objectMapper.readValue(json, new TypeReference<>() {});
+
+            String cmd       = form.getCmd();
+            String app       = form.getApp();
+            String subCmd    = form.getSubCmd();
+            String token     = form.getToken();
+            String response  = form.getResponseCode();
+            Map<String, Object> dataMap = form.getData();
 
             if (NextStepRecommendengineConstant.PROCESS_EMBEDDING.equals(cmd)) {
-                PostEmbeddingDto data = objectMapper.treeToValue(dataNode, PostEmbeddingDto.class);
-                Long postId           = data.getPostId();
-                String description    = data.getDescription();
+                Long postId = ((Number) dataMap.get("postId")).longValue();
+                String description = (String) dataMap.get("description");
 
                 log.info("📥 Received PROCESS_EMBEDDING for postId={}, desc={}", postId, description);
 
@@ -64,19 +63,18 @@ public class RabbitMQListener extends ABasicController {
                 rabbitService.handleSendMsg(
                         app,
                         completeProcessCvQueue,
-                        data,
+                        dataMap,
                         cmd,
                         subCmd,
-                        responseCode,
+                        response,
                         token
                 );
 
-                log.info("Forwarded to data-embedding: {}", data);
+                log.info("Forwarded to data-embedding: {}", dataMap);
 
             } else if (NextStepRecommendengineConstant.EXTRACT_CV.equals(cmd)) {
-                CvEmbeddingDto data = objectMapper.treeToValue(dataNode, CvEmbeddingDto.class);
-                Long candidateId    = data.getCandidateId();
-                String cv           = data.getCv();
+                Long candidateId = ((Number) dataMap.get("candidateId")).longValue();
+                String cv = (String) dataMap.get("cv");
 
                 log.info("📥 Received EXTRACT_CV for candidateId={}, cv={}", candidateId, cv);
 
@@ -89,14 +87,14 @@ public class RabbitMQListener extends ABasicController {
                 rabbitService.handleSendMsg(
                         app,
                         completeProcessCvQueue,
-                        data,
+                        dataMap,
                         cmd,
                         subCmd,
-                        responseCode,
+                        response,
                         token
                 );
 
-                log.info("Forwarded to data-embedding: {}", data);
+                log.info("Forwarded to data-embedding: {}", dataMap);
             } else {
                 log.warn("📥 Unrecognized cmd: {}", cmd);
             }
