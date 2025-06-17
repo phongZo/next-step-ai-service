@@ -20,6 +20,7 @@ public class PostEmbedding extends Auditable<String>{
 
     private Long postId;
 
+    @Column(name = "description", columnDefinition = "LONGTEXT")
     private String description;
 
     @Column(name = "embedding", columnDefinition = "LONGTEXT")
