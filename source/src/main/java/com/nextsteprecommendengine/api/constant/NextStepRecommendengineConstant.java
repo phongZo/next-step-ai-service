@@ -49,6 +49,7 @@ public class NextStepRecommendengineConstant {
     public static final Integer ACCOUNT_PLATFORM_GOOGLE = 1;
 
     public static final String PROCESS_EMBEDDING = "PROCESS_EMBEDDING";
+    public static final String  EXTRACT_CV = " EXTRACT_CV";
 
     private NextStepRecommendengineConstant(){
         throw new IllegalStateException("Utility class");
