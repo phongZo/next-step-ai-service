@@ -1,0 +1,8 @@
+CREATE DATABASE db_nextstep CHARACTER SET utf8;
+CREATE USER 'next_step_usr'@'localhost' IDENTIFIED BY 'next_step_usr@123';
+GRANT ALL PRIVILEGES ON db_nextstep.* TO 'next_step_usr'@'localhost';
+FLUSH PRIVILEGES;
+
+CREATE USER 'next_step_usr'@'%' IDENTIFIED BY 'next_step_usr@123';
+GRANT ALL PRIVILEGES ON db_nextstep.* TO 'next_step_usr'@'%';
+FLUSH PRIVILEGES;
